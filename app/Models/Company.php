@@ -19,4 +19,10 @@ class Company extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function chatLogs()
+    {
+        return $this->hasMany(ChatLog::class);
+    }
+
 }
