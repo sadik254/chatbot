@@ -20,3 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // OpenAI API routes
 Route::middleware('auth:sanctum')->post('/chat', [ChatController::class, 'chat']);
+
+// Chat History routes
+Route::middleware('auth:sanctum')->get('/chat/history', [ChatController::class, 'history']);
+Route::middleware('auth:sanctum')->get('/chat/conversations', [ChatController::class, 'conversationHistory']);

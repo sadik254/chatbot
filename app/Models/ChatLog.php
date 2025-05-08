@@ -11,6 +11,7 @@ class ChatLog extends Model
         'company_id',
         'question',
         'answer',
+        'conversation_id',
     ];
     
 
