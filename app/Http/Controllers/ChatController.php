@@ -37,7 +37,7 @@ class ChatController extends Controller
                 'Authorization' => 'Bearer ' . config('services.openai.key'),
             ])
                 ->post('https://api.openai.com/v1/responses', [
-                    'model' => 'gpt-3.5-turbo',
+                    'model' => $company->fine_tuned_model ?? 'gpt-3.5-turbo',
                     'instructions' => $companyInstructions,
                     'input' => [
                         [

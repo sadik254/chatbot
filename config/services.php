@@ -37,6 +37,8 @@ return [
 
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
+        'org' => env('OPENAI_ORG_ID'),
+        'project' => env('OPENAI_PROJECT_ID'),
     ],
 
 

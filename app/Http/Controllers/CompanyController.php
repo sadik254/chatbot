@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Company;
 use Illuminate\Support\Str;
+use App\Services\OpenAI\FineTuneService;
 
 class CompanyController extends Controller
 {
@@ -46,4 +47,72 @@ class CompanyController extends Controller
             'company' => $company,
         ]);
     }
+
+    // Updating company description aka training data and tone
+    public function updateDescription(Request $request, FineTuneService $fineTuneService)
+    {
+        $request->validate([
+            'description' => 'required|string',
+            'tone' => 'nullable|string|max:255',
+        ]);
+
+        $user = $request->user();
+        $company = $user->company;
+
+        if (! $company) {
+            return response()->json(['message' => 'No company associated with this user.'], 404);
+        }
+
+        $company->update([
+            'description' => $request->description,
+            'tone' => $request->input('tone', $company->tone),
+        ]);
+
+        $jobId = $fineTuneService->generateAndUploadTrainingData($company);
+
+        if ($jobId) {
+            $company->update(['fine_tuned_model' => 'pending:' . $jobId]);
+        }
+
+        return response()->json([
+            'message' => 'Company description updated and fine-tuning started.',
+            'company' => $company,
+            'fine_tune_job_id' => $jobId,
+        ]);
+    }
+
+    public function show(Request $request)
+    {
+        $user = $request->user();
+        $company = $user->company;
+
+        if (! $company) {
+            return response()->json(['message' => 'No company associated with this user.'], 404);
+        }
+
+        return response()->json([
+            'company' => $company,
+        ]);
+    }
+    public function destroy(Request $request)
+    {
+        $user = $request->user();
+        $company = $user->company;
+
+        if (! $company) {
+            return response()->json(['message' => 'No company associated with this user.'], 404);
+        }
+
+        // Detach the company from the user
+        $user->company()->dissociate();
+        $user->save();
+
+        // Delete the company
+        $company->delete();
+
+        return response()->json([
+            'message' => 'Company deleted successfully.',
+        ]);
+    }
+
 }

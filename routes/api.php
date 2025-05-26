@@ -16,6 +16,9 @@ Route::post('admin/register', [AuthController::class, 'register']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('admin/logout', [AuthController::class, 'logout']);
     Route::post('company/create', [CompanyController::class, 'store']);
+    Route::post('company/update-description', [CompanyController::class, 'updateDescription']);
+    Route::get('company', [CompanyController::class, 'show']);
+    Route::post('company/delete', [CompanyController::class, 'destroy']);
 });
 
 // OpenAI API routes
