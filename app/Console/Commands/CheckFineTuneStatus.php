@@ -53,9 +53,9 @@ class CheckFineTuneStatus extends Command
         $this->info("🏁 Finished checking fine-tune jobs.");
     }
 
-    public function schedule(Schedule $schedule): void
-    {
-        // 🔁 Run every 10 minutes in production
-        $schedule->command(static::class)->everyTenMinutes();
-    }
+    // public function schedule(Schedule $schedule): void
+    // {
+    //     // 🔁 Run every 10 minutes in production
+    //     $schedule->command(static::class)->everyTenMinutes();
+    // }
 }
