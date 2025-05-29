@@ -16,6 +16,7 @@
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
             font-family: Arial, sans-serif;
             background: white;
+            color: black;
             z-index: 9999;
             overflow: hidden;
             border: 1px solid #ddd;
