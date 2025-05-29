@@ -134,4 +134,35 @@ class ChatController extends Controller
         return response()->json($chats);
     }
 
+    public function publicChat(Request $request, \App\Models\Company $company)
+    {
+        $request->validate([
+            'message' => 'required|string',
+        ]);
+
+        $message = $request->input('message');
+
+        // Optional: Log anonymously or store IP
+        // AI reply
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . config('services.openai.key'),
+            'Content-Type' => 'application/json',
+        ])->post('https://api.openai.com/v1/chat/completions', [
+            'model' => $company->fine_tuned_model ?: 'gpt-3.5-turbo',
+            'messages' => [
+                ['role' => 'system', 'content' => "You are an AI assistant for {$company->name}. Be helpful and polite."],
+                ['role' => 'user', 'content' => $message],
+            ],
+        ]);
+
+        if ($response->failed()) {
+            return response()->json(['error' => 'AI response failed'], 500);
+        }
+
+        return response()->json([
+            'reply' => $response->json()['choices'][0]['message']['content']
+        ]);
+    }
+
+
 }

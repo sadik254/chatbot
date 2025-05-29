@@ -123,4 +123,9 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    // 'providers' => [
+    //     // Add your custom provider
+    //     // App\Providers\RateLimitServiceProvider::class,
+    // ],
+
 ];
