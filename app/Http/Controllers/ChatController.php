@@ -134,35 +134,99 @@ class ChatController extends Controller
         return response()->json($chats);
     }
 
+    // Public chat older method
+    // public function publicChat(Request $request, \App\Models\Company $company)
+    // {
+    //     $request->validate([
+    //         'message' => 'required|string',
+    //     ]);
+
+    //     $message = $request->input('message');
+
+    //     // Optional: Log anonymously or store IP
+    //     // AI reply
+    //     $response = Http::withHeaders([
+    //         'Authorization' => 'Bearer ' . config('services.openai.key'),
+    //         'Content-Type' => 'application/json',
+    //     ])->post('https://api.openai.com/v1/chat/completions', [
+    //         'model' => $company->fine_tuned_model ?: 'gpt-3.5-turbo',
+    //         'messages' => [
+    //             ['role' => 'system', 'content' => "You are an AI assistant for {$company->name}. Be helpful and polite."],
+    //             ['role' => 'user', 'content' => $message],
+    //         ],
+    //         'temperature' => 0.3, //Adjust temeprature to get consistent replies lower is more consistent, higher is more creative
+    //     ]);
+
+    //     if ($response->failed()) {
+    //         return response()->json(['error' => 'AI response failed'], 500);
+    //     }
+
+    //     return response()->json([
+    //         'reply' => $response->json()['choices'][0]['message']['content']
+    //     ]);
+    // }
+
     public function publicChat(Request $request, \App\Models\Company $company)
     {
         $request->validate([
             'message' => 'required|string',
+            'conversation_id' => 'nullable|uuid',
         ]);
 
         $message = $request->input('message');
+        $conversationId = $request->input('conversation_id') ?? Str::uuid()->toString();
 
-        // Optional: Log anonymously or store IP
-        // AI reply
+        // Fetch last 5 message pairs (user + assistant = 10 entries max)
+        $historyLogs = \App\Models\ChatLog::where('conversation_id', $conversationId)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->reverse(); // to maintain chronological order
+
+        $chatHistory = [];
+
+        foreach ($historyLogs as $entry) {
+            $chatHistory[] = ['role' => 'user', 'content' => $entry->question];
+            $chatHistory[] = ['role' => 'assistant', 'content' => $entry->answer];
+        }
+
+        // Add current user message
+        $chatHistory[] = ['role' => 'user', 'content' => $message];
+
+        // Prepare system prompt and final message list
+        $messages = array_merge([
+            ['role' => 'system', 'content' => "You are an AI assistant for {$company->name}. Be helpful, professional, and polite. Answer questions related to the company's services and products."]
+        ], $chatHistory);
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . config('services.openai.key'),
             'Content-Type' => 'application/json',
         ])->post('https://api.openai.com/v1/chat/completions', [
             'model' => $company->fine_tuned_model ?: 'gpt-3.5-turbo',
-            'messages' => [
-                ['role' => 'system', 'content' => "You are an AI assistant for {$company->name}. Be helpful and polite."],
-                ['role' => 'user', 'content' => $message],
-            ],
+            'messages' => $messages,
+            'temperature' => 0.3,
         ]);
 
         if ($response->failed()) {
             return response()->json(['error' => 'AI response failed'], 500);
         }
 
+        $reply = $response->json()['choices'][0]['message']['content'] ?? 'Sorry, I couldn’t process your request.';
+
+        // Save to chat log
+        // dd($company->user_id);
+        \App\Models\ChatLog::create([
+            'conversation_id' => $conversationId,
+            'company_id' => $company->id,
+            'user_id' => null,
+            'question' => $message,
+            'answer' => $reply,
+        ]);
+
         return response()->json([
-            'reply' => $response->json()['choices'][0]['message']['content']
+            'reply' => $reply,
+            'conversation_id' => $conversationId,
         ]);
     }
-
 
 }

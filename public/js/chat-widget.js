@@ -99,25 +99,33 @@
         appendMessage('You', message);
         input.value = '';
 
+        const conversationId = localStorage.getItem('conversation_id') || null;
+
         fetch(`${endpoint}/${companySlug}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({
+                message: message,
+                conversation_id: conversationId
+            })
         })
             .then(res => res.json())
             .then(data => {
+                if (data.conversation_id) {
+                    localStorage.setItem('conversation_id', data.conversation_id);
+                }
+
                 if (data && data.reply) {
-                    appendMessage('Bot', data.reply);
+                    appendMessage('AI Agent', data.reply);
                 } else {
-                    appendMessage('Bot', '<em>No response</em>');
+                    appendMessage('AI Agent', '<em>No response</em>');
                 }
             })
             .catch(() => {
-                appendMessage('Bot', '<em>Error contacting server</em>');
+                appendMessage('AI Agent', '<em>Error contacting server</em>');
             });
     }
 
-    // Optional: Welcome message
-    appendMessage('Bot', "Hi! I'm here to help you 😊");
-
+    // Optional welcome message
+    appendMessage('AI Agent', "Hi! I'm here to help you 😊");
 })();
