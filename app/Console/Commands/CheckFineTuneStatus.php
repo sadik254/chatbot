@@ -15,6 +15,9 @@ class CheckFineTuneStatus extends Command
 
     public function handle()
     {
+
+        // Log::info("🤖 Scheduled command \"openai:check-fine-tune-status\" is running.");
+
         $companies = Company::where('fine_tuned_model', 'like', 'pending:%')->get();
 
         foreach ($companies as $company) {
