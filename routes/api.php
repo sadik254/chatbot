@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('company/update-description', [CompanyController::class, 'updateDescription']);
     Route::get('company', [CompanyController::class, 'show']);
     Route::post('company/delete', [CompanyController::class, 'destroy']);
+    Route::get('company/embedscript', [CompanyController::class, 'generateEmbedScript']);
 });
 
 // OpenAI API routes

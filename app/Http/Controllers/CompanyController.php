@@ -112,4 +112,29 @@ class CompanyController extends Controller
         ]);
     }
 
+    public function generateEmbedScript(Request $request)
+    {
+        $user = $request->user();
+        $company = $user->company;
+
+        if (! $company || ! $company->slug) {
+            return response("console.error('Company not found for user.');", 404)
+                ->header('Content-Type', 'application/javascript');
+        }
+
+        $baseUrl = rtrim(config('app.url'), '/');
+
+        $script = <<<JAVASCRIPT
+    <script>
+        window.COMPANY_SLUG = '{$company->slug}';
+        window.CHAT_API_ENDPOINT = '{$baseUrl}/api/public-chat';
+    </script>
+    <script src="{$baseUrl}/js/chat-widget.js"></script>
+    JAVASCRIPT;
+
+        return response($script, 200)
+            ->header('Content-Type', 'application/javascript');
+    }
+
+
 }
