@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Company;
 use Illuminate\Support\Str;
 use App\Services\OpenAI\FineTuneService;
+use App\Jobs\FineTuneCompanyJob;
 
 class CompanyController extends Controller
 {
@@ -49,7 +50,7 @@ class CompanyController extends Controller
     }
 
     // Updating company description aka training data and tone
-    public function updateDescription(Request $request, FineTuneService $fineTuneService)
+    public function updateDescription(Request $request)
     {
         $request->validate([
             'description' => 'required|string',
@@ -68,16 +69,12 @@ class CompanyController extends Controller
             'tone' => $request->input('tone', $company->tone),
         ]);
 
-        $jobId = $fineTuneService->generateAndUploadTrainingData($company);
-
-        if ($jobId) {
-            $company->update(['fine_tuned_model' => 'pending:' . $jobId]);
-        }
+        // ✅ Dispatch job to queue
+        FineTuneCompanyJob::dispatch($company->id);
 
         return response()->json([
-            'message' => 'Company description updated and fine-tuning started.',
+            'message' => 'Company description updated. Fine-tuning is in progress.',
             'company' => $company,
-            'fine_tune_job_id' => $jobId,
         ]);
     }
 

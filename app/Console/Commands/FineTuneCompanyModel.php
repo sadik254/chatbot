@@ -18,7 +18,7 @@ class FineTuneCompanyModel extends Command
 
         foreach ($companies as $company) {
             $slug = $company->slug;
-            $filePath = storage_path("app/fine-tune/company_{$slug}.jsonl");
+            $filePath = storage_path("app/private/fine-tune/company_{$slug}.jsonl");
 
             if (!file_exists($filePath)) {
                 $this->warn("File missing for {$slug}");

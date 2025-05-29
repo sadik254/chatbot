@@ -6,11 +6,12 @@ use Illuminate\Console\Command;
 use App\Models\Company;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Log;
 
 class CheckFineTuneStatus extends Command
 {
     protected $signature = 'openai:check-fine-tune-status';
-    protected $description = 'Check fine-tuning job status for each company and update model name when completed';
+    protected $description = 'Check fine-tuning job status for each company and update model name when completed or failed';
 
     public function handle()
     {
@@ -18,37 +19,43 @@ class CheckFineTuneStatus extends Command
 
         foreach ($companies as $company) {
             $jobId = str_replace('pending:', '', $company->fine_tuned_model);
-
-            $this->info("Checking job ID: $jobId for {$company->name}");
+            Log::info("🔍 Checking job ID: {$jobId} for {$company->name}");
 
             $response = Http::withToken(config('services.openai.key'))
                 ->get("https://api.openai.com/v1/fine_tuning/jobs/{$jobId}");
 
             if (! $response->ok()) {
-                $this->error("Failed to get status for job {$jobId}");
+                Log::error("❌ Failed to fetch job status for {$jobId}");
+                $this->error("Failed to fetch job status for {$jobId}");
                 continue;
             }
 
             $jobData = $response->json();
+            $status = $jobData['status'];
 
-            if ($jobData['status'] === 'succeeded') {
-                $fineTunedModel = $jobData['fine_tuned_model'];
-                $company->update(['fine_tuned_model' => $fineTunedModel]);
-                $this->info("✅ Model ready: {$fineTunedModel} for {$company->name}");
-            } elseif ($jobData['status'] === 'failed') {
-                $this->warn("❌ Fine-tuning failed for {$company->name}");
-                $company->update(['fine_tuned_model' => null]); // or log error separately
+            Log::info("ℹ️ Status for {$company->name}: {$status}");
+
+            if ($status === 'succeeded') {
+                $modelName = $jobData['fine_tuned_model'];
+                $company->update(['fine_tuned_model' => $modelName]);
+                $this->info("✅ Model ready: {$modelName} for {$company->name}");
+                Log::info("✅ Fine-tune succeeded for {$company->name}: {$modelName}");
+            } elseif ($status === 'failed') {
+                $error = $jobData['error']['message'] ?? 'Unknown error';
+                $company->update(['fine_tuned_model' => null]);
+                $this->warn("❌ Fine-tune failed for {$company->name}: {$error}");
+                Log::warning("❌ Fine-tune failed for {$company->name}: {$error}");
             } else {
-                $this->line("Still pending: {$jobData['status']}");
+                $this->line("⏳ Still in progress: {$status}");
             }
         }
 
-        $this->info("Finished checking fine-tune jobs.");
+        $this->info("🏁 Finished checking fine-tune jobs.");
     }
 
     public function schedule(Schedule $schedule): void
     {
-        $schedule->command(static::class)->hourly();
+        // 🔁 Run every 10 minutes in production
+        $schedule->command(static::class)->everyTenMinutes();
     }
-
 }
