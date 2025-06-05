@@ -18,7 +18,7 @@ class FineTuneService
         $filename = "private/fine-tune/company_{$slug}.jsonl";
 
         // 🔥 Auto-generate 10 examples using GPT
-        $prompt = "Generate minimum 10 JSONL-formatted fine-tune examples for a company named '{$company->name}'. No Information should be left out. Use the following details:
+        $prompt = "Generate minimum 20 JSONL-formatted fine-tune examples for a company named '{$company->name}'. No Information should be left out. Use the following details:
     Company Name: {$company->name}
     Company Phone: {$company->phone}
     Company Email: {$company->email}
@@ -33,7 +33,7 @@ class FineTuneService
         {\"role\": \"assistant\", \"content\": \"<correct helpful reply>\"}
     ]
     }
-    Return minimum 10 lines, no surrounding array, no comments. Also make sure include all the possible questions and answers based on the written text, no information should be left,";
+    Return minimum 20 lines, no surrounding array, no comments. Also make sure include all the possible questions and answers based on the written text, no information should be left,";
 
         $response = Http::withToken(config('services.openai.key'))
             ->timeout(60) // <-- increase timeout to 60 seconds
@@ -63,7 +63,7 @@ class FineTuneService
             return true;
         });
 
-        if ($validLines->count() < 10) {
+        if ($validLines->count() < 20) {
             \Log::error("❌ Not enough valid training examples for {$company->name}. Aborting fine-tuning.");
             return null;
         }
