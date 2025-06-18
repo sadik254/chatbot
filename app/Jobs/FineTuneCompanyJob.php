@@ -84,7 +84,11 @@ class FineTuneCompanyJob implements ShouldQueue
             Log::info("✅ Fine-tune started for {$company->name}. Job ID: {$jobId}");
         } else {
             Log::error("❌ Fine-tune failed to start for {$company->name}");
+
+            // 🚨 Throw exception so Laravel retries the job
+            throw new \Exception("Fine-tune failed for {$company->name}");
         }
+
     }
 
     public function middleware(): array
