@@ -72,6 +72,9 @@ class CompanyController extends Controller
         // ✅ Dispatch job to queue
         FineTuneCompanyJob::dispatch($company->id);
 
+        
+        \Log::info('✅ Job dispatched for company ' . $company->name);
+
         return response()->json([
             'message' => 'Company description updated. Fine-tuning is in progress.',
             'company' => $company,

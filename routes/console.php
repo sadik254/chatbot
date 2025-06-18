@@ -10,4 +10,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Schedule commands
-Schedule::command('openai:check-fine-tune-status')->everyTenMinutes();
+Schedule::command('openai:check-fine-tune-status')->everyMinute();
