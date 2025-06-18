@@ -76,8 +76,12 @@ class FineTuneCompanyJob implements ShouldQueue
 
         // 🚀 Start a new fine-tune job
         Log::info("🔥 Starting fine-tune for: {$company->name}");
+        Log::info("🚀 Calling generateAndUploadTrainingData for {$company->name}");
 
         $jobId = $fineTuneService->generateAndUploadTrainingData($company);
+
+        Log::info("🧪 generateAndUploadTrainingData result: " . ($jobId ?? 'null'));
+
 
         if ($jobId) {
             $company->update(['fine_tuned_model' => "pending:{$jobId}"]);
