@@ -15,6 +15,8 @@ class FineTuneService
 
     public function generateAndUploadTrainingData(Company $company): ?string
     {
+         \Log::info("The generateAndUploadTrainingData method was called for company: {$company->name}");
+
         if (! $company->description) return null;
 
         $tone = $company->tone ?? 'professional';
