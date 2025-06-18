@@ -19,8 +19,16 @@ class CheckFineTuneStatus extends Command
 
         // Log::info("🤖 Scheduled command \"openai:check-fine-tune-status\" is running.");
         Log::info("🟢 Command is running and starting fine-tune status check.");
+        Log::info("🟡 Found " . $companies->count() . " companies for fine-tune check.");
 
-        $companies = Company::where('fine_tuned_model', 'like', 'pending:%')->get();
+        // older query that causes issues
+        // $companies = Company::where('fine_tuned_model', 'like', 'pending:%')->get();
+
+        // New query to avoid issues with null values
+        $companies = Company::where(function ($query) {
+            $query->where('fine_tuned_model', 'like', 'pending:%')
+                ->orWhere('fine_tuned_model', 'failed');
+        })->get();
 
         foreach ($companies as $company) {
             $jobId = str_replace('pending:', '', $company->fine_tuned_model);
@@ -47,7 +55,7 @@ class CheckFineTuneStatus extends Command
                 Log::info("✅ Fine-tune succeeded for {$company->name}: {$modelName}");
             } elseif ($status === 'failed') {
                 $error = $jobData['error']['message'] ?? 'Unknown error';
-                $company->update(['fine_tuned_model' => null]);
+                $company->update(['fine_tuned_model' => 'failed']);
                 $this->warn("❌ Fine-tune failed for {$company->name}: {$error}");
                 Log::warning("❌ Fine-tune failed for {$company->name}: {$error}");
                 FineTuneCompanyJob::dispatch($company->id);
