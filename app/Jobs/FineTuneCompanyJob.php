@@ -44,7 +44,7 @@ class FineTuneCompanyJob implements ShouldQueue
         // ✅ Check if job is marked as pending in DB
         if ($company->fine_tuned_model && str_starts_with($company->fine_tuned_model, 'pending:')) {
             $jobId = str_replace('pending:', '', $company->fine_tuned_model);
-
+            // Log::info("🔍This enters the first if check");
             $check = Http::withToken(config('services.openai.key'))
                 ->get("https://api.openai.com/v1/fine_tuning/jobs/{$jobId}");
 

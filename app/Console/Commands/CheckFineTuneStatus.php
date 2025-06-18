@@ -18,7 +18,7 @@ class CheckFineTuneStatus extends Command
     {
 
         // Log::info("🤖 Scheduled command \"openai:check-fine-tune-status\" is running.");
-        Log::info("🟢 Command is running and starting fine-tune status check.");
+        // Log::info("🟢 Command is running and starting fine-tune status check.");
 
         // older query that causes issues
         // $companies = Company::where('fine_tuned_model', 'like', 'pending:%')->get();
@@ -28,7 +28,7 @@ class CheckFineTuneStatus extends Command
             $query->where('fine_tuned_model', 'like', 'pending:%')
                 ->orWhere('fine_tuned_model', 'failed');
         })->get();
-        Log::info("🟡 Found " . $companies->count() . " companies for fine-tune check.");
+        // Log::info("🟡 Found " . $companies->count() . " companies for fine-tune check.");
 
         foreach ($companies as $company) {
             $jobId = str_replace('pending:', '', $company->fine_tuned_model);
