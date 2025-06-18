@@ -7,6 +7,7 @@ use App\Models\Company;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\FineTuneCompanyJob;
 
 class CheckFineTuneStatus extends Command
 {
@@ -48,6 +49,8 @@ class CheckFineTuneStatus extends Command
                 $company->update(['fine_tuned_model' => null]);
                 $this->warn("❌ Fine-tune failed for {$company->name}: {$error}");
                 Log::warning("❌ Fine-tune failed for {$company->name}: {$error}");
+                FineTuneCompanyJob::dispatch($company->id);
+                Log::info("🔁 Retrying fine-tune for {$company->name} by dispatching FineTuneCompanyJob.");
             } else {
                 $this->line("⏳ Still in progress: {$status}");
             }
