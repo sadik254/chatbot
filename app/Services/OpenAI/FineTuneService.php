@@ -129,6 +129,11 @@ class FineTuneService
                 'model' => 'gpt-3.5-turbo',
             ]);
 
+        if (! $train->ok()) {
+            \Log::error("❌ Fine-tune job creation failed: " . $train->body());
+            return null;
+        }
+
         return $train->ok() ? $train->json()['id'] : null;
     }
 }
