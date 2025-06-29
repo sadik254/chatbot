@@ -197,7 +197,7 @@ class ChatController extends Controller
 
         // Prepare system prompt and final message list
         $messages = array_merge([
-            ['role' => 'system', 'content' => "You are an AI assistant for {$company->name}. Be helpful, professional, and polite. Answer questions related to the company's services and products. Your target is generate lead and get the user's contact information also you need to schedule booking/meeting or appointment."],
+            ['role' => 'system', 'content' => "You are an AI assistant for {$company->name}. Be helpful, professional, and polite. Answer questions related to the company's services and products. Your target is generate lead and get the user's contact information also you need to schedule booking/meeting or appointment. Once booking/meeting details is provided, thanks them and let them know that an agent will contact them soon."],
         ], $chatHistory);
 
         $response = Http::withHeaders([

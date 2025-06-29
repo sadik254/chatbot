@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\LeadController;
 use App\Http\Middleware\PublicChatRateLimiter;
 
 // Route::get('/user', function (Request $request) {
@@ -33,3 +34,6 @@ Route::middleware('auth:sanctum')->get('/chat/conversations', [ChatController::c
 // Public chat endpoint
 Route::post('/public-chat/{company:slug}', [ChatController::class, 'publicChat'])
     ->middleware('public-chat-rate-limiter');
+
+// Leads endpoints
+Route::middleware('auth:sanctum')->get('/leads', [LeadController::class, 'index']);
