@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\ChatLog;
 use Illuminate\Support\Str;
+use App\Models\Lead;
+use Carbon\Carbon;
 
 class ChatController extends Controller
 {
@@ -223,10 +225,63 @@ class ChatController extends Controller
             'answer' => $reply,
         ]);
 
+         if ($this->containsContactInfo($message)) {
+            Lead::create([
+                'company_id' => $company->id,
+                'description' => $message,
+            ]);
+        }
+
         return response()->json([
             'reply' => $reply,
             'conversation_id' => $conversationId,
         ]);
+    }
+
+    protected function containsContactInfo(string $text): bool
+    {
+        return preg_match('/\b\d{10,}\b/', $text) ||                     // phone
+            preg_match('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}\b/i', $text) || // email
+            $this->containsDate($text) ||           // using carbon to parse dates
+            preg_match('/\b((?:[01]?\d|2[0-3]):[0-5]\d(?:\s?[APap][Mm])?|\b(?:[1-9]|1[0-2])\s?[APap][Mm])\b/', $text); //advanced regex for times
+    }
+
+    // protected function containsContactInfo(string $text): bool
+    // {
+    //     // Match phone numbers (10+ digits)
+    //     $hasPhone = preg_match('/\b\d{10,}\b/', $text);
+
+    //     // Match email addresses
+    //     $hasEmail = preg_match('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}\b/i', $text);
+
+    //     // Match dates: YYYY-MM-DD, DD/MM/YYYY, or "1st July 2025"
+    //     $hasDate = preg_match('/\b(\d{4}-\d{2}-\d{2}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{1,2}(st|nd|rd|th)?\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})\b/i', $text);
+
+    //     // Match times: 14:30, 2:30 PM, 10am, etc.
+    //     $hasTime = preg_match('/\b(\d{1,2}:\d{2}(\s?[ap]m)?|\d{1,2}\s?[ap]m)\b/i', $text);
+
+    //     return $hasPhone || $hasEmail || $hasDate || $hasTime;
+    // }
+
+    protected function containsDate(string $text): bool
+    {
+        // Break text into words and try to parse each one or group
+        $phrases = explode(' ', $text);
+
+        foreach ($phrases as $i => $word) {
+            // Try current and next 1-2 words to form phrases like "12 June", "next Friday", etc.
+            for ($len = 1; $len <= 3; $len++) {
+                $phrase = implode(' ', array_slice($phrases, $i, $len));
+                $parsed = Carbon::parse($phrase, now()->timezone)->toDateTimeString();
+
+                // Check if parsed result is a valid future or current date
+                if ($parsed && strtotime($parsed) > strtotime('-1 day')) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 }

@@ -28,4 +28,9 @@ class Company extends Model
         return $this->hasMany(ChatLog::class);
     }
 
+    public function leads()
+    {
+        return $this->hasMany(Lead::class);
+    }
+
 }
