@@ -7,6 +7,8 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\LeadController;
 use App\Http\Middleware\PublicChatRateLimiter;
+use App\Http\Controllers\PlanController;
+use App\Http\Controllers\SubscriptionController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -37,3 +39,13 @@ Route::post('/public-chat/{company:slug}', [ChatController::class, 'publicChat']
 
 // Leads endpoints
 Route::middleware('auth:sanctum')->get('/leads', [LeadController::class, 'index']);
+
+// Plans endpoints
+Route::get('/plans', [PlanController::class, 'index']); 
+
+// Subscription endpoints
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
+    Route::get('/subscribe/confirm', [SubscriptionController::class, 'confirm']);
+    Route::get('/subscribe/status', [SubscriptionController::class, 'status']);
+});

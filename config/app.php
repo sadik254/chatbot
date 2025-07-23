@@ -127,5 +127,6 @@ return [
     //     // Add your custom provider
     //     // App\Providers\RateLimitServiceProvider::class,
     // ],
+    'frontend_url' => env('FRONTEND_URL'),
 
 ];

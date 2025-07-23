@@ -242,7 +242,7 @@ class ChatController extends Controller
     {
         return preg_match('/\b\d{10,}\b/', $text) ||                     // phone
             preg_match('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}\b/i', $text) || // email
-            // $this->containsDate($text) ||           // using carbon to parse dates
+            $this->containsDate($text) ||           // using carbon to parse dates
             preg_match('/\b((?:[01]?\d|2[0-3]):[0-5]\d(?:\s?[APap][Mm])?|\b(?:[1-9]|1[0-2])\s?[APap][Mm])\b/', $text); //advanced regex for times
     }
 
@@ -262,26 +262,33 @@ class ChatController extends Controller
 
     //     return $hasPhone || $hasEmail || $hasDate || $hasTime;
     // }
+    protected function containsDate(string $text): bool
+    {
+        // Roughly match common date-related keywords/numbers first
+        if (!preg_match('/\b(tomorrow|today|next|january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}[\/\.-]\d{1,2})\b/i', $text)) {
+            return false; // skip costly parsing if there's no potential date
+        }
 
-    // protected function containsDate(string $text): bool
-    // {
-    //     // Break text into words and try to parse each one or group
-    //     $phrases = explode(' ', $text);
+        $phrases = explode(' ', $text);
 
-    //     foreach ($phrases as $i => $word) {
-    //         // Try current and next 1-2 words to form phrases like "12 June", "next Friday", etc.
-    //         for ($len = 1; $len <= 3; $len++) {
-    //             $phrase = implode(' ', array_slice($phrases, $i, $len));
-    //             $parsed = Carbon::parse($phrase, now()->timezone)->toDateTimeString();
+        foreach ($phrases as $i => $word) {
+            for ($len = 1; $len <= 3; $len++) {
+                $phrase = implode(' ', array_slice($phrases, $i, $len));
 
-    //             // Check if parsed result is a valid future or current date
-    //             if ($parsed && strtotime($parsed) > strtotime('-1 day')) {
-    //                 return true;
-    //             }
-    //         }
-    //     }
+                try {
+                    $parsed = Carbon::parse($phrase, now()->timezone);
 
-    //     return false;
-    // }
+                    if ($parsed && $parsed->greaterThanOrEqualTo(now()->subDay())) {
+                        return true;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+
+        return false;
+    }
+
 
 }
