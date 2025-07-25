@@ -42,10 +42,13 @@ Route::middleware('auth:sanctum')->get('/leads', [LeadController::class, 'index'
 
 // Plans endpoints
 Route::get('/plans', [PlanController::class, 'index']); 
+Route::post('/plans', [PlanController::class, 'store']);
 
 // Subscription endpoints
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
-    Route::get('/subscribe/confirm', [SubscriptionController::class, 'confirm']);
-    Route::get('/subscribe/status', [SubscriptionController::class, 'status']);
+    Route::post('subscriptions/paypal/complete', [SubscriptionController::class, 'completePayPalSubscription']);
+    // Route to list user's subscriptions
+    Route::get('subscriptions', [SubscriptionController::class, 'index']);
+    // Route to cancel a specific subscription
+    Route::post('subscriptions/{subscription}/cancel', [SubscriptionController::class, 'cancel']);
 });
